@@ -70,10 +70,7 @@ async def start(client,message):
 	Hello {wish} {message.from_user.first_name }
 	__I am file renamer bot, Please sent any telegram 
 	**Document Or Video** and enter new filename to rename it__
-	""",reply_to_message_id = message.id ,  
-	reply_markup=InlineKeyboardMarkup(
-	reply_markup=InlineKeyboardMarkup([[ InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Save-Restricted-Bot")]])
-	)	 
+	""",reply_to_message_id = message.id , )	 
 @bot.on_message(filters.text)
 def save(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
 
