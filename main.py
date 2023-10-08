@@ -64,7 +64,7 @@ def progress(current, total, message, type):
 
 # start command
 @bot.on_message(filters.command(["start"]))
-async def start(client,message):
+def send_start (client,message):
 	old = insert(int(message.chat.id))
 	user_id = message.from_user.id
 	letdata = profind(int(user_id))
