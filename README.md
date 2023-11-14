@@ -9,7 +9,7 @@
 - `HASH` Your API Hash from my.telegram.org
 - `ID` Your API ID from my.telegram.org
 - `TOKEN` Your bot token from @BotFather
-- `STRING` Your session string, for examplpe you can get it at [replit.com](https://replit.com/@ErichDaniken/Generate-Telegram-String-Session)
+- `STRING` Your session string, you can get it at [gist](https://gist.github.com/bipinkrish/0940b30ed66a5537ae1b5aaaee716897#file-main-py) and run it locally
 
 ---
 
@@ -26,11 +26,18 @@ _first send invite link of the chat (unnecessary if the account of string sessio
 then send post/s link_
 
 
+__FOR BOT CHATS__
+
+_send link with '/b/', bot's username and message id, you might want to install some unofficial client to get the id like below_
+
+```
+https://t.me/b/botusername/4321
+```
+
 __MULTI POSTS__
 
-_send public/private posts link as explained above with formate "from - to" to send multiple messages_
+_send public/private posts link as explained above with formate "from - to" to send multiple messages like below_
 
-examples: 
 
 ```
 https://t.me/xxxx/1001-1010
@@ -38,4 +45,4 @@ https://t.me/xxxx/1001-1010
 https://t.me/c/xxxx/101 - 120
 ```
 
-note: space in between doesn't matter
+_note that space in between doesn't matter_

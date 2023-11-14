@@ -1,6 +1,6 @@
 import pyrogram
 from pyrogram import Client, filters
-from pyrogram.errors import UserAlreadyParticipant, InviteHashExpired
+from pyrogram.errors import UserAlreadyParticipant, InviteHashExpired, UsernameNotOccupied
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import time
@@ -65,13 +65,14 @@ def progress(current, total, message, type):
 # start command
 @bot.on_message(filters.command(["start"]))
 def send_start(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-	bot.send_message(message.chat.id, f"__👋 Hi **{message.from_user.mention}**, I am Save Restricted Bot, I can send you restricted content by it's post link__",
+	bot.send_message(message.chat.id, f"__👋 Hi **{message.from_user.mention}**, I am Save Restricted Bot, I can send you restricted content by it's post link__\n\n{USAGE}",
 	reply_markup=InlineKeyboardMarkup([[ InlineKeyboardButton("🌐 Source Code", url="https://github.com/bipinkrish/Save-Restricted-Bot")]]), reply_to_message_id=message.id)
 
 
 	
 @bot.on_message(filters.text)
 def save(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
+	print(message.text)
 
 	# joining chats
 	if "https://t.me/+" in message.text or "https://t.me/joinchat/" in message.text:
@@ -90,7 +91,7 @@ def save(client: pyrogram.client.Client, message: pyrogram.types.messages_and_me
 			bot.send_message(message.chat.id,"**Chat alredy Joined**", reply_to_message_id=message.id)
 		except InviteHashExpired:
 			bot.send_message(message.chat.id,"**Invalid Link**", reply_to_message_id=message.id)
-	
+
 	# getting message
 	elif "https://t.me/" in message.text:
 
@@ -104,17 +105,35 @@ def save(client: pyrogram.client.Client, message: pyrogram.types.messages_and_me
 
 			# private
 			if "https://t.me/c/" in message.text:
-				chatid = int("-100" + datas[-2])
+				chatid = int("-100" + datas[4])
+				
 				if acc is None:
 					bot.send_message(message.chat.id,f"**String Session is not Set**", reply_to_message_id=message.id)
 					return
-				try: handle_private(message,chatid,msgid)
-				except Exception as e: bot.send_message(message.chat.id,f"**Error** : __{e}__", reply_to_message_id=message.id)
+				
+				handle_private(message,chatid,msgid)
+				# try: handle_private(message,chatid,msgid)
+				# except Exception as e: bot.send_message(message.chat.id,f"**Error** : __{e}__", reply_to_message_id=message.id)
 			
+			# bot
+			elif "https://t.me/b/" in message.text:
+				username = datas[4]
+				
+				if acc is None:
+					bot.send_message(message.chat.id,f"**String Session is not Set**", reply_to_message_id=message.id)
+					return
+				try: handle_private(message,username,msgid)
+				except Exception as e: bot.send_message(message.chat.id,f"**Error** : __{e}__", reply_to_message_id=message.id)
+
 			# public
 			else:
-				username = datas[-2]
-				msg  = bot.get_messages(username,msgid)
+				username = datas[3]
+
+				try: msg  = bot.get_messages(username,msgid)
+				except UsernameNotOccupied: 
+					bot.send_message(message.chat.id,f"**The username is not occupied by anyone**", reply_to_message_id=message.id)
+					return
+
 				try: bot.copy_message(message.chat.id, msg.chat.id, msg.id,reply_to_message_id=message.id)
 				except:
 					if acc is None:
@@ -126,11 +145,13 @@ def save(client: pyrogram.client.Client, message: pyrogram.types.messages_and_me
 			# wait time
 			time.sleep(10)
 
+
 # handle private
 def handle_private(message: pyrogram.types.messages_and_media.message.Message, chatid: int, msgid: int):
 		msg: pyrogram.types.messages_and_media.message.Message = acc.get_messages(chatid,msgid)
+		msg_type = get_message_type(msg)
 
-		if "text" in str(msg):
+		if "Text" == msg_type:
 			bot.send_message(message.chat.id, msg.text, entities=msg.entities, reply_to_message_id=message.id)
 			return
 
@@ -143,7 +164,7 @@ def handle_private(message: pyrogram.types.messages_and_media.message.Message, c
 		upsta = threading.Thread(target=lambda:upstatus(f'{message.id}upstatus.txt',smsg),daemon=True)
 		upsta.start()
 		
-		if "Document" in str(msg):
+		if "Document" == msg_type:
 			try:
 				thumb = acc.download_media(msg.document.thumbs[0].file_id)
 			except: thumb = None
@@ -151,7 +172,7 @@ def handle_private(message: pyrogram.types.messages_and_media.message.Message, c
 			bot.send_document(message.chat.id, file, thumb=thumb, caption=msg.caption, caption_entities=msg.caption_entities, reply_to_message_id=message.id, progress=progress, progress_args=[message,"up"])
 			if thumb != None: os.remove(thumb)
 
-		elif "Video" in str(msg):
+		elif "Video" == msg_type:
 			try: 
 				thumb = acc.download_media(msg.video.thumbs[0].file_id)
 			except: thumb = None
@@ -159,16 +180,16 @@ def handle_private(message: pyrogram.types.messages_and_media.message.Message, c
 			bot.send_video(message.chat.id, file, duration=msg.video.duration, width=msg.video.width, height=msg.video.height, thumb=thumb, caption=msg.caption, caption_entities=msg.caption_entities, reply_to_message_id=message.id, progress=progress, progress_args=[message,"up"])
 			if thumb != None: os.remove(thumb)
 
-		elif "Animation" in str(msg):
+		elif "Animation" == msg_type:
 			bot.send_animation(message.chat.id, file, reply_to_message_id=message.id)
 			   
-		elif "Sticker" in str(msg):
+		elif "Sticker" == msg_type:
 			bot.send_sticker(message.chat.id, file, reply_to_message_id=message.id)
 
-		elif "Voice" in str(msg):
+		elif "Voice" == msg_type:
 			bot.send_voice(message.chat.id, file, caption=msg.caption, thumb=thumb, caption_entities=msg.caption_entities, reply_to_message_id=message.id, progress=progress, progress_args=[message,"up"])
 
-		elif "Audio" in str(msg):
+		elif "Audio" == msg_type:
 			try:
 				thumb = acc.download_media(msg.audio.thumbs[0].file_id)
 			except: thumb = None
@@ -176,12 +197,86 @@ def handle_private(message: pyrogram.types.messages_and_media.message.Message, c
 			bot.send_audio(message.chat.id, file, caption=msg.caption, caption_entities=msg.caption_entities, reply_to_message_id=message.id, progress=progress, progress_args=[message,"up"])   
 			if thumb != None: os.remove(thumb)
 
-		elif "Photo" in str(msg):
+		elif "Photo" == msg_type:
 			bot.send_photo(message.chat.id, file, caption=msg.caption, caption_entities=msg.caption_entities, reply_to_message_id=message.id)
 
 		os.remove(file)
 		if os.path.exists(f'{message.id}upstatus.txt'): os.remove(f'{message.id}upstatus.txt')
 		bot.delete_messages(message.chat.id,[smsg.id])
+
+
+# get the type of message
+def get_message_type(msg: pyrogram.types.messages_and_media.message.Message):
+	try:
+		msg.document.file_id
+		return "Document"
+	except: pass
+
+	try:
+		msg.video.file_id
+		return "Video"
+	except: pass
+
+	try:
+		msg.animation.file_id
+		return "Animation"
+	except: pass
+
+	try:
+		msg.sticker.file_id
+		return "Sticker"
+	except: pass
+
+	try:
+		msg.voice.file_id
+		return "Voice"
+	except: pass
+
+	try:
+		msg.audio.file_id
+		return "Audio"
+	except: pass
+
+	try:
+		msg.photo.file_id
+		return "Photo"
+	except: pass
+
+	try:
+		msg.text
+		return "Text"
+	except: pass
+
+
+USAGE = """**FOR PUBLIC CHATS**
+
+__just send post/s link__
+
+**FOR PRIVATE CHATS**
+
+__first send invite link of the chat (unnecessary if the account of string session already member of the chat)
+then send post/s link__
+
+**FOR BOT CHATS**
+
+__send link with '/b/', bot's username and message id, you might want to install some unofficial client to get the id like below__
+
+```
+https://t.me/b/botusername/4321
+```
+
+**MULTI POSTS**
+
+__send public/private posts link as explained above with formate "from - to" to send multiple messages like below__
+
+```
+https://t.me/xxxx/1001-1010
+
+https://t.me/c/xxxx/101 - 120
+```
+
+__note that space in between doesn't matter__
+"""
 
 
 # infinty polling
